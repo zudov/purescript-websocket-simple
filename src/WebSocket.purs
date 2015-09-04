@@ -6,7 +6,6 @@ import Data.Function
 
 foreign import data WebSocket :: !
 foreign import data Socket :: *
-foreign import data CloseEvent :: *
 
 type URI = String
 type Message = String
