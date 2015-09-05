@@ -12,7 +12,7 @@
   ],
   "repository": {                                                          
     "type": "git",                                                         
-    "url": "git://github.com/zudov/purescript-websocket-simple.git
+    "url": "git://github.com/zudov/purescript-websocket-simple.git"
   },
   "dependencies": {
     "purescript-eff": "~0.1.0",
