@@ -10,8 +10,15 @@
     "bower_components",
     "output"
   ],
+  "repository": {                                                          
+    "type": "git",                                                         
+    "url": "git://github.com/zudov/purescript-websocket-simple.git"
+  },
   "dependencies": {
-    "purescript-console": "^0.1.0"
-  , "purescript-functions": "~0.1.0"
+    "purescript-eff": "~0.1.0",
+    "purescript-functions": "~0.1.0"
+  },
+  "devDependencies": {
+    "purescript-console": "~0.1.0"
   }
 }
