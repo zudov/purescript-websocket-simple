@@ -64,6 +64,8 @@ Register a callback for `error` events.
 onOpen :: forall e a. Socket -> Eff (ws :: WebSocket | e) a -> Eff (ws :: WebSocket | e) Unit
 ```
 
+Register a callback for `open` events.
+
 #### `onClose`
 
 ``` purescript

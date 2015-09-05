@@ -54,12 +54,12 @@ onError :: forall e a.
                    -> Eff (ws :: WebSocket | e) Unit
 onError socket callback = runFn2 onErrorImpl socket callback
 
--- | Register a callback for `open` events.
 foreign import onOpenImpl :: forall e a.
                 Fn2 Socket
                     (Eff (ws :: WebSocket | e) a)
                     (Eff (ws :: WebSocket | e) Unit)
 
+-- | Register a callback for `open` events.
 onOpen :: forall e a.
             Socket -> Eff (ws :: WebSocket | e) a
                    -> Eff (ws :: WebSocket | e) Unit
