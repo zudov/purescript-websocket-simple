@@ -1,86 +1,162 @@
 -- | This module defines a simple low-level interface to the websockets API.
 
 module WebSocket
-  ( WebSocket()
-  , Socket()
-  , URI()
+  ( WEBSOCKET()
+  , WebSocket()
+  , newWebSocket
+  , Connection(..)
+  , URL()
   , Message()
-  , mkWebSocket
-  , onMessage
-  , onError
-  , onOpen
-  , onClose
-  , send
+  , Code(..)
+  , Reason(..)
+  , ReadyState(..)
+  , Protocol(..)
+  , BufferedAmount(..)
+  , BinaryType(..)
   ) where
 
 import Prelude
 import Control.Monad.Eff
 import Data.Function
+import Data.Functor.Invariant
+import Data.StateVar
+import Data.Nullable
+import DOM.Event.EventTarget
+import Data.Maybe
+
+foreign import specViolation :: forall a. String -> a
 
 -- | The effect associated with websocket connections.
-foreign import data WebSocket :: !
+foreign import data WEBSOCKET :: !
 
--- | A reference to a websocket.
-foreign import data Socket :: *
+-- | A reference to a WebSocket object.
+foreign import data WebSocket :: *
 
--- | A synonym for URI strings.
-type URI = String
+-- | Initiate a websocket connection. This would call `WebSocket` constructor and
+-- | would use it to create `Connection` object which can be used to safely
+-- | interface with WebSocket API from purescript. Raw `WebSocket` object is
+-- | kept in a closure and is accessible via `socket` label.
+newWebSocket :: forall eff. URL -> Array Protocol -> Eff (ws :: WEBSOCKET | eff) Connection
+newWebSocket url protocols = enhanceConnection <$> runFn2 newWebSocketImpl url protocols
+
+foreign import newWebSocketImpl :: forall eff. Fn2 URL
+                                                   (Array Protocol)
+                                                   (Eff (ws :: WEBSOCKET | eff) ConnectionImpl)
+
+type ConnectionImpl =
+  { setBinaryType     :: forall eff. String -> Eff (ws :: WEBSOCKET | eff) Unit
+  , getBinaryType     :: forall eff. Eff (ws :: WEBSOCKET | eff) String
+  , getBufferedAmount :: forall eff. Eff (ws :: WEBSOCKET | eff) Int
+  , setOnclose        :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
+  , setOnerror        :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
+  , setOnmessage      :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
+  , setOnopen         :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
+  , setProtocol       :: forall eff. String -> Eff (ws :: WEBSOCKET | eff) Unit
+  , getProtocol       :: forall eff. Eff (ws :: WEBSOCKET | eff) String
+  , getReadyState     :: forall eff. Eff (ws :: WEBSOCKET | eff) Int
+  , getUrl            :: forall eff. Eff (ws :: WEBSOCKET | eff) String
+  , closeImpl         :: forall eff. Maybe Code -> Maybe Reason -> Eff (ws :: WEBSOCKET | eff) Unit
+  , sendImpl          :: forall eff. String -> Eff (ws :: WEBSOCKET | eff) Unit
+  , getSocket         :: forall eff. Eff (ws :: WEBSOCKET | eff) WebSocket
+  }
+
+enhanceConnection :: ConnectionImpl -> Connection
+enhanceConnection c = Connection
+  { binaryType: imap toBinaryType fromBinaryType $ mkVar c.getBinaryType c.setBinaryType
+  , bufferedAmount: mkReadOnlyVar c.getBufferedAmount
+  , onclose: mkWriteOnlyVar c.setOnclose
+  , onerror: mkWriteOnlyVar c.setOnerror
+  , onmessage: mkWriteOnlyVar c.setOnmessage
+  , onopen: mkWriteOnlyVar c.setOnopen
+  , protocol: mkVar c.getProtocol c.setProtocol
+  , readyState: toReadyState <$> mkReadOnlyVar c.getReadyState
+  , url: mkReadOnlyVar c.getUrl
+  , close: c.closeImpl
+  , send: c.sendImpl
+  , socket: mkReadOnlyVar c.getSocket
+  }
+
+-- | - `binaryType` -- The type of binary data being transmitted by the connection.
+-- | - `bufferedAmount` -- The number of bytes of data that have been queued
+--                         using calls to `send` but not yet transmitted to the
+--                         network. This value does not reset to zero when the
+--                         connection is closed; if you keep calling `send`,
+--                         this will continue to climb.
+-- | - `onclose` -- An event listener to be called when the `Connection`'s
+-- |                `readyState` changes to `Closed`.
+-- | - `onerror` -- An event listener to be called when an error occurs.
+-- | - `onmessage` -- An event listener to be called when a message is received
+-- |                  from the server.
+-- | - `onopen` -- An event listener to be called when the `Connection`'s
+-- |               readyState changes to `Open`; this indicates that the
+-- |               connection is ready to send and receive data.
+-- | - `protocol` -- A string indicating the name of the sub-protocol the server selected.
+-- | - `readyState` -- The current state of the connection.
+-- | - `url` -- The URL as resolved by during construction. This is always an absolute URL.
+-- | - `close` -- Closes the connection or connection attempt, if any.
+-- |              If the connection is already CLOSED, this method does nothing.
+-- |              If `Code` isn't specified a default value of 1000 (indicating
+-- |               a normal "transaction complete" closure) is assumed
+-- | - `send` -- Transmits data to the server.
+-- | - `socket` -- Reference to closured WebSocket object.
+newtype Connection = Connection
+  { binaryType     :: forall eff. Var (ws :: WEBSOCKET | eff) BinaryType
+  , bufferedAmount :: forall eff. ReadOnlyVar (ws :: WEBSOCKET | eff) BufferedAmount
+  , onclose        :: forall eff handlerEff. WriteOnlyVar (ws :: WEBSOCKET | eff) (EventListener handlerEff)
+  , onerror        :: forall eff handlerEff. WriteOnlyVar (ws :: WEBSOCKET | eff) (EventListener handlerEff)
+  , onmessage      :: forall eff handlerEff. WriteOnlyVar (ws :: WEBSOCKET | eff) (EventListener handlerEff)
+  , onopen         :: forall eff handlerEff. WriteOnlyVar (ws :: WEBSOCKET | eff) (EventListener handlerEff)
+  , protocol       :: forall eff. Var (ws :: WEBSOCKET | eff) Protocol
+  , readyState     :: forall eff. ReadOnlyVar (ws :: WEBSOCKET | eff) ReadyState
+  , url            :: forall eff. ReadOnlyVar (ws :: WEBSOCKET | eff) URL
+  , close          :: forall eff. Maybe Code -> Maybe Reason -> Eff (ws :: WEBSOCKET | eff) Unit
+  , send           :: forall eff. String -> Eff (ws :: WEBSOCKET | eff) Unit
+  , socket         :: forall eff. ReadOnlyVar (ws :: WEBSOCKET | eff) WebSocket
+  }
+
+-- | The type of binary data being transmitted by the connection.
+data BinaryType = Blob | ArrayBuffer
+
+toBinaryType :: String -> BinaryType
+toBinaryType "blob" = Blob
+toBinaryType "arraybuffer" = ArrayBuffer
+toBinaryType s = specViolation "binaryType should be either 'blob' or 'arraybuffer'"
+
+fromBinaryType Blob = "blob"
+fromBinaryType ArrayBuffer = "arraybuffer"
+
+-- | The number of bytes of data that have been buffered (queued but not yet transmitted)
+type BufferedAmount = Int
+
+-- | A string indicating the name of the sub-protocol.
+type Protocol = String
+
+-- | State of the connection.
+data ReadyState = Connecting | Open | Closing | Closed
+
+instance showReadyState :: Show ReadyState where
+  show Connecting = "Connecting"
+  show Open       = "Open"
+  show Closing    = "Closing"
+  show Closed     = "Closed"
+
+toReadyState :: Int -> ReadyState
+toReadyState 0 = Connecting
+toReadyState 1 = Open
+toReadyState 2 = Closing
+toReadyState 3 = Closed
+toReadyState n = specViolation "readyState isn't in the range of valid constants"
+
+-- | A numeric value indicating the status code explaining why the connection is being closed.
+-- | See [the list of status codes](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes).
+type Code = Int
+
+-- | A human-readable string explaining why the connection is closing. This
+-- | string must be no longer than 123 bytes of UTF-8 text (not characters).
+type Reason = String
+
+-- | A synonym for URL strings.
+type URL = String
 
 -- | A synonym for message strings.
 type Message = String
-
--- | Create a websocket object for a URI.
-foreign import mkWebSocket :: forall e. URI -> Eff (ws :: WebSocket | e) Socket
-
-foreign import onMessageImpl :: forall e a.
-                Fn2 Socket
-                    (Message -> Eff (ws :: WebSocket | e) a)
-                    (Eff (ws :: WebSocket | e) Unit)
-
--- | Register a callback for incoming messages.
-onMessage :: forall e a.
-             Socket -> (Message -> Eff (ws :: WebSocket | e) a)
-                    -> Eff (ws :: WebSocket | e) Unit
-onMessage socket callback = runFn2 onMessageImpl socket callback
-
-foreign import onErrorImpl :: forall e a.
-                Fn2 Socket
-                    (Eff (ws :: WebSocket | e) a)
-                    (Eff (ws :: WebSocket | e) Unit)
-
--- | Register a callback for `error` events.
-onError :: forall e a.
-            Socket -> Eff (ws :: WebSocket | e) a
-                   -> Eff (ws :: WebSocket | e) Unit
-onError socket callback = runFn2 onErrorImpl socket callback
-
-foreign import onOpenImpl :: forall e a.
-                Fn2 Socket
-                    (Eff (ws :: WebSocket | e) a)
-                    (Eff (ws :: WebSocket | e) Unit)
-
--- | Register a callback for `open` events.
-onOpen :: forall e a.
-            Socket -> Eff (ws :: WebSocket | e) a
-                   -> Eff (ws :: WebSocket | e) Unit
-onOpen socket callback = runFn2 onOpenImpl socket callback
-
-foreign import onCloseImpl :: forall e a.
-                Fn2 Socket
-                    (Eff (ws :: WebSocket | e) a)
-                    (Eff (ws :: WebSocket | e) Unit)
-
--- | Register a callback for `close` events.
-onClose :: forall e a.
-            Socket -> Eff (ws :: WebSocket | e) a
-                   -> Eff (ws :: WebSocket | e) Unit
-
-onClose socket callback = runFn2 onCloseImpl socket callback
-
-foreign import sendImpl :: forall e.
-                Fn2 Socket Message (Eff (ws :: WebSocket | e) Unit)
-
--- | Send a message to a websocket.
-send :: forall e.
-         Socket -> Message -> Eff (ws :: WebSocket | e) Unit
-send socket msg  = runFn2 sendImpl socket msg
