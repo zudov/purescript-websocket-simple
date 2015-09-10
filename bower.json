@@ -14,7 +14,7 @@
     "url": "git://github.com/zudov/purescript-websocket-simple.git"
   },
   "dependencies": {
-    "purescript-dom": "~0.2.6",
+    "purescript-dom": "zudov/purescript-dom#event-param",
     "purescript-eff": "~0.1.0",
     "purescript-functions": "~0.1.0",
     "purescript-invariant": "~0.3.0",
