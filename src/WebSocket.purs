@@ -24,6 +24,8 @@ import Data.Nullable
 import DOM.Event.EventTarget
 import DOM.Event.Types
 import Data.Maybe
+import Data.Generic
+import Data.Enum
 
 foreign import specViolation :: forall a. String -> a
 
@@ -67,12 +69,17 @@ enhanceConnection c = Connection
   , onmessage: makeSettableVar c.setOnmessage
   , onopen: makeSettableVar c.setOnopen
   , protocol: makeVar c.getProtocol c.setProtocol
-  , readyState: toReadyState <$> makeGettableVar c.getReadyState
+  , readyState: unsafeReadyState <$> makeGettableVar c.getReadyState
   , url: makeGettableVar c.getUrl
   , close: c.closeImpl
   , send: c.sendImpl
   , socket: makeGettableVar c.getSocket
   }
+  where
+    unsafeReadyState :: Int -> ReadyState
+    unsafeReadyState =
+      toEnum >>> fromMaybe (specViolation "readyState isn't in the range of valid constants")
+
 
 -- | - `binaryType` -- The type of binary data being transmitted by the connection.
 -- | - `bufferedAmount` -- The number of bytes of data that have been queued
@@ -132,18 +139,40 @@ type Protocol = String
 -- | State of the connection.
 data ReadyState = Connecting | Open | Closing | Closed
 
-instance showReadyState :: Show ReadyState where
-  show Connecting = "Connecting"
-  show Open       = "Open"
-  show Closing    = "Closing"
-  show Closed     = "Closed"
+derive instance genericReadyState :: Generic ReadyState
 
-toReadyState :: Int -> ReadyState
-toReadyState 0 = Connecting
-toReadyState 1 = Open
-toReadyState 2 = Closing
-toReadyState 3 = Closed
-toReadyState n = specViolation "readyState isn't in the range of valid constants"
+instance eqReadyState :: Eq ReadyState where
+  eq = gEq
+
+instance ordReadyState :: Ord ReadyState where
+  compare = gCompare
+
+instance showReadyState :: Show ReadyState where
+  show = gShow
+
+instance boundedReadyState :: Bounded ReadyState where
+  bottom = Connecting
+  top    = Closed
+
+instance enumReadyState :: Enum ReadyState where
+  cardinality = Cardinality 4
+  toEnum      = toEnumReadyState
+  fromEnum    = fromEnumReadyState
+  succ        = defaultSucc toEnumReadyState fromEnumReadyState
+  pred        = defaultPred toEnumReadyState fromEnumReadyState
+
+toEnumReadyState :: Int -> Maybe ReadyState
+toEnumReadyState 0 = Just Connecting
+toEnumReadyState 1 = Just Open
+toEnumReadyState 2 = Just Closing
+toEnumReadyState 3 = Just Closed
+toEnumReadyState _ = Nothing
+
+fromEnumReadyState :: ReadyState -> Int
+fromEnumReadyState Connecting = 0
+fromEnumReadyState Open       = 1
+fromEnumReadyState Closing    = 2
+fromEnumReadyState Closed     = 3
 
 -- | A numeric value indicating the status code explaining why the connection is being closed.
 -- | See [the list of status codes](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes).

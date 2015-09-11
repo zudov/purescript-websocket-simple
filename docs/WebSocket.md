@@ -73,7 +73,12 @@ State of the connection.
 
 ##### Instances
 ``` purescript
+instance genericReadyState :: Generic ReadyState
+instance eqReadyState :: Eq ReadyState
+instance ordReadyState :: Ord ReadyState
 instance showReadyState :: Show ReadyState
+instance boundedReadyState :: Bounded ReadyState
+instance enumReadyState :: Enum ReadyState
 ```
 
 #### `Code`
