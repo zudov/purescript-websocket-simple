@@ -18,7 +18,7 @@ import WebSocket
 main = do
   Connection socket <- newWebSocket "ws://echo.websocket.org" []
 
-  socket.onopen $= eventListener \event -> do
+  socket.onopen $= \event -> do
     logAny event
     log "onopen: Connection opened"
 
@@ -30,7 +30,7 @@ main = do
     log "onopen: Sending 'goodbye'"
     socket.send "goodbye"
 
-  socket.onmessage $= eventListener \event -> do
+  socket.onmessage $= \event -> do
     logAny event
     -- TODO: Figure out how to access 'data' properly, using MessageEvent
     let message = unsafeFromForeign $ fromRight $ prop "data" $ toForeign event
@@ -41,6 +41,6 @@ main = do
       log "onmessage: closing connection"
       socket.close Nothing Nothing
 
-  socket.onclose $= eventListener \event -> do
+  socket.onclose $= \event -> do
     logAny event
     log "onclose: Connection closed"

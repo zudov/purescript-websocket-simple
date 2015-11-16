@@ -20,12 +20,14 @@ import Control.Monad.Eff
 import Control.Monad.Eff.Var
 import Data.Function
 import Data.Functor.Invariant
+import Data.Functor.Contravariant
 import Data.Nullable
 import DOM.Event.EventTarget
 import DOM.Event.Types
 import Data.Maybe
 import Data.Generic
 import Data.Enum
+import Unsafe.Coerce
 
 foreign import specViolation :: forall a. String -> a
 
@@ -47,10 +49,10 @@ type ConnectionImpl =
   { setBinaryType     :: forall eff. String -> Eff (ws :: WEBSOCKET | eff) Unit
   , getBinaryType     :: forall eff. Eff (ws :: WEBSOCKET | eff) String
   , getBufferedAmount :: forall eff. Eff (ws :: WEBSOCKET | eff) Int
-  , setOnclose        :: forall eff handlerEff. EventListener CloseEvent handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
-  , setOnerror        :: forall eff handlerEff. EventListener Event handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
-  , setOnmessage      :: forall eff handlerEff. EventListener MessageEvent handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
-  , setOnopen         :: forall eff handlerEff. EventListener Event handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
+  , setOnclose        :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
+  , setOnerror        :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
+  , setOnmessage      :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
+  , setOnopen         :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
   , setProtocol       :: forall eff. String -> Eff (ws :: WEBSOCKET | eff) Unit
   , getProtocol       :: forall eff. Eff (ws :: WEBSOCKET | eff) String
   , getReadyState     :: forall eff. Eff (ws :: WEBSOCKET | eff) Int
@@ -60,14 +62,17 @@ type ConnectionImpl =
   , getSocket         :: forall eff. Eff (ws :: WEBSOCKET | eff) WebSocket
   }
 
+coerceEvent :: forall a. Event -> a
+coerceEvent = unsafeCoerce
+
 enhanceConnection :: ConnectionImpl -> Connection
 enhanceConnection c = Connection
   { binaryType: imap toBinaryType fromBinaryType $ makeVar c.getBinaryType c.setBinaryType
   , bufferedAmount: makeGettableVar c.getBufferedAmount
-  , onclose: makeSettableVar c.setOnclose
-  , onerror: makeSettableVar c.setOnerror
-  , onmessage: makeSettableVar c.setOnmessage
-  , onopen: makeSettableVar c.setOnopen
+  , onclose: cmap (eventListener <<< (`map` coerceEvent)) (makeSettableVar c.setOnclose)
+  , onerror: cmap (eventListener <<< (`map` coerceEvent)) (makeSettableVar c.setOnerror)
+  , onmessage: cmap (eventListener <<< (`map` coerceEvent)) (makeSettableVar c.setOnmessage)
+  , onopen: cmap (eventListener <<< (`map` coerceEvent)) (makeSettableVar c.setOnopen)
   , protocol: makeVar c.getProtocol c.setProtocol
   , readyState: unsafeReadyState <$> makeGettableVar c.getReadyState
   , url: makeGettableVar c.getUrl
@@ -107,10 +112,10 @@ enhanceConnection c = Connection
 newtype Connection = Connection
   { binaryType     :: forall eff. Var (ws :: WEBSOCKET | eff) BinaryType
   , bufferedAmount :: forall eff. GettableVar (ws :: WEBSOCKET | eff) BufferedAmount
-  , onclose        :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (EventListener CloseEvent handlerEff)
-  , onerror        :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (EventListener Event handlerEff)
-  , onmessage      :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (EventListener MessageEvent handlerEff)
-  , onopen         :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (EventListener Event handlerEff)
+  , onclose        :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (CloseEvent -> Eff handlerEff Unit)
+  , onerror        :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit)
+  , onmessage      :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (MessageEvent -> Eff handlerEff Unit)
+  , onopen         :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit)
   , protocol       :: forall eff. Var (ws :: WEBSOCKET | eff) Protocol
   , readyState     :: forall eff. GettableVar (ws :: WEBSOCKET | eff) ReadyState
   , url            :: forall eff. GettableVar (ws :: WEBSOCKET | eff) URL
