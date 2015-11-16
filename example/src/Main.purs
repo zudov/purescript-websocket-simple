@@ -1,17 +1,13 @@
 module Main where
 
 import Prelude
-import Data.Maybe
-import Control.Bind
-import Control.Monad
-import Control.Monad.Eff
-import Control.Monad.Eff.Var
-import Control.Monad.Eff.Console
-import Control.Monad.Eff.Console.Unsafe
-import Data.Either.Unsafe
-import Data.Foreign
-import Data.Foreign.Index
-import DOM.Event.EventTarget
+
+import Control.Bind ((=<<))
+import Control.Monad (when)
+import Control.Monad.Eff.Var (($=), get)
+import Control.Monad.Eff.Console (log)
+import Control.Monad.Eff.Console.Unsafe (logAny)
+import Data.Maybe (Maybe(..))
 
 import WebSocket
 
@@ -32,10 +28,9 @@ main = do
 
   socket.onmessage $= \event -> do
     logAny event
-    -- TODO: Figure out how to access 'data' properly, using MessageEvent
-    let message = unsafeFromForeign $ fromRight $ prop "data" $ toForeign event
+    let message = messageData event
 
-    log $ "onmessage: Received '" ++ message ++ "'"
+    log $ "onmessage: Received '" ++ messageData event ++ "'"
 
     when (message == "goodbye") do
       log "onmessage: closing connection"

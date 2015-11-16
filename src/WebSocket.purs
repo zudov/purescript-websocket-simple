@@ -7,6 +7,7 @@ module WebSocket
   , Connection(..)
   , URL()
   , Message()
+  , messageData
   , Code(..)
   , Reason(..)
   , ReadyState(..)
@@ -28,6 +29,9 @@ import Data.Maybe
 import Data.Generic
 import Data.Enum
 import Unsafe.Coerce
+import Data.Either
+import Data.Foreign
+import Data.Foreign.Index
 
 foreign import specViolation :: forall a. String -> a
 
@@ -44,6 +48,11 @@ newWebSocket url protocols = enhanceConnection <$> runFn2 newWebSocketImpl url p
 foreign import newWebSocketImpl :: forall eff. Fn2 URL
                                                    (Array Protocol)
                                                    (Eff (ws :: WEBSOCKET | eff) ConnectionImpl)
+
+messageData :: MessageEvent -> Message
+messageData event = case prop "data" (toForeign event) of
+                      Right x -> unsafeFromForeign x
+                      Left _  -> specViolation "'data' missing from MessageEvent"
 
 type ConnectionImpl =
   { setBinaryType     :: forall eff. String -> Eff (ws :: WEBSOCKET | eff) Unit
@@ -82,8 +91,9 @@ enhanceConnection c = Connection
   }
   where
     unsafeReadyState :: Int -> ReadyState
-    unsafeReadyState =
-      toEnum >>> fromMaybe (specViolation "readyState isn't in the range of valid constants")
+    unsafeReadyState x =
+      fromMaybe (specViolation "readyState isn't in the range of valid constants")
+                (toEnum x)
 
 
 -- | - `binaryType` -- The type of binary data being transmitted by the connection.
@@ -132,6 +142,7 @@ toBinaryType "blob" = Blob
 toBinaryType "arraybuffer" = ArrayBuffer
 toBinaryType s = specViolation "binaryType should be either 'blob' or 'arraybuffer'"
 
+fromBinaryType :: BinaryType -> String
 fromBinaryType Blob = "blob"
 fromBinaryType ArrayBuffer = "arraybuffer"
 
