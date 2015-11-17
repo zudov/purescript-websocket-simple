@@ -3,40 +3,56 @@
 
 // module WebSocket
 
-exports.mkWebSocket = function(url) {
-    return function() {
-        return new WebSocket(url);
-    }
+exports.specViolation = function(s) {
+  throw new Error(s);
 }
 
-exports.onMessageImpl = function(socket, callback) {
-    return function() {
-        socket.onmessage = function(msg) {
-            callback(msg.data)();
+exports.newWebSocketImpl = function(url, protocols) {
+  return function() {
+    var socket = new WebSocket(url, protocols);
+    var getSocketProp = function (prop) {
+      return function() { return socket[prop]; }
+    }
+    var setSocketProp = function (prop) {
+      return function(v) {
+        return function() {
+          socket[prop] = v;
+          return {};
         }
+      }
     }
-}
-
-exports.onErrorImpl = function(socket, callback) {
-    return function() {
-        socket.onerror = callback;
-    }
-}
-
-exports.onCloseImpl = function(socket, callback) {
-    return function() {
-        socket.onclose = callback;
-    }
-}
-
-exports.onOpenImpl = function(socket, callback) {
-    return function() {
-        socket.onopen = callback;
-    }
-}
-
-exports.sendImpl = function(socket, message) {
-    return function() {
-        socket.send(message);
-    }
+    return { setBinaryType: setSocketProp("binaryType")
+           , getBinaryType: getSocketProp("binaryType")
+           , getBufferedAmount: getSocketProp("bufferedAmount")
+           , setOnclose: setSocketProp("onclose")
+           , getOnclose: getSocketProp("onclose")
+           , setOnerror: setSocketProp("onerror")
+           , getOnerror: getSocketProp("onerror")
+           , setOnmessage: setSocketProp("onmessage")
+           , getOnmessage: getSocketProp("onmessage")
+           , setOnopen: setSocketProp("onopen")
+           , getOnopen: getSocketProp("onopen")
+           , setProtocol: setSocketProp("protocol")
+           , getProtocol: getSocketProp("protocol")
+           , getReadyState: getSocketProp("readyState")
+           , getUrl: getSocketProp("url")
+           , closeImpl:
+              function(mCode) {
+                return function(mReason) {
+                  return function() {
+                    socket.close(mCode.value0, mReason.value0);
+                    return {};
+                  }
+                }
+              }
+           , sendImpl:
+              function(message) {
+                return function() {
+                  socket.send(message);
+                  return {};
+                }
+              }
+           , getSocket: function () { return socket }
+           };
+  }
 }

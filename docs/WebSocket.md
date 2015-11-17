@@ -2,84 +2,196 @@
 
 This module defines a simple low-level interface to the websockets API.
 
-#### `WebSocket`
+#### `WEBSOCKET`
 
 ``` purescript
-data WebSocket :: !
+data WEBSOCKET :: !
 ```
 
 The effect associated with websocket connections.
 
-#### `Socket`
+#### `WebSocket`
 
 ``` purescript
-data Socket :: *
+data WebSocket :: *
 ```
 
-A reference to a websocket.
+A reference to a WebSocket object.
 
-#### `URI`
+#### `newWebSocket`
 
 ``` purescript
-type URI = String
+newWebSocket :: forall eff. URL -> Array Protocol -> Eff (ws :: WEBSOCKET | eff) Connection
 ```
 
-A synonym for URI strings.
+Initiate a websocket connection.
+
+#### `runMessageEvent`
+
+``` purescript
+runMessageEvent :: MessageEvent -> Message
+```
+
+#### `Connection`
+
+``` purescript
+newtype Connection
+  = Connection { binaryType :: forall eff. Var (ws :: WEBSOCKET | eff) BinaryType, bufferedAmount :: forall eff. GettableVar (ws :: WEBSOCKET | eff) BufferedAmount, onclose :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (CloseEvent -> Eff handlerEff Unit), onerror :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit), onmessage :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (MessageEvent -> Eff handlerEff Unit), onopen :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit), protocol :: forall eff. Var (ws :: WEBSOCKET | eff) Protocol, readyState :: forall eff. GettableVar (ws :: WEBSOCKET | eff) ReadyState, url :: forall eff. GettableVar (ws :: WEBSOCKET | eff) URL, close :: forall eff. Maybe Code -> Maybe Reason -> Eff (ws :: WEBSOCKET | eff) Unit, send :: forall eff. Message -> Eff (ws :: WEBSOCKET | eff) Unit, socket :: forall eff. GettableVar (ws :: WEBSOCKET | eff) WebSocket }
+```
+
+#### `BinaryType`
+
+``` purescript
+data BinaryType
+  = Blob
+  | ArrayBuffer
+```
+
+The type of binary data being transmitted by the connection.
+
+#### `BufferedAmount`
+
+``` purescript
+newtype BufferedAmount
+```
+
+The number of bytes of data that have been buffered (queued but not yet transmitted)
+
+##### Instances
+``` purescript
+Generic BufferedAmount
+Eq BufferedAmount
+Ord BufferedAmount
+```
+
+#### `runBufferedAmount`
+
+``` purescript
+runBufferedAmount :: BufferedAmount -> Int
+```
+
+#### `Protocol`
+
+``` purescript
+newtype Protocol
+  = Protocol String
+```
+
+A string indicating the name of the sub-protocol.
+
+##### Instances
+``` purescript
+Generic Protocol
+Eq Protocol
+Ord Protocol
+```
+
+#### `runProtocol`
+
+``` purescript
+runProtocol :: Protocol -> String
+```
+
+#### `ReadyState`
+
+``` purescript
+data ReadyState
+  = Connecting
+  | Open
+  | Closing
+  | Closed
+```
+
+State of the connection.
+
+##### Instances
+``` purescript
+Generic ReadyState
+Eq ReadyState
+Ord ReadyState
+Show ReadyState
+Bounded ReadyState
+Enum ReadyState
+```
+
+#### `Code`
+
+``` purescript
+newtype Code
+  = Code Int
+```
+
+A numeric value indicating the status code explaining why the connection is being closed.
+See [the list of status codes](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes).
+
+##### Instances
+``` purescript
+Generic Code
+Eq Code
+Ord Code
+```
+
+#### `runCode`
+
+``` purescript
+runCode :: Code -> Int
+```
+
+#### `Reason`
+
+``` purescript
+newtype Reason
+  = Reason String
+```
+
+A human-readable string explaining why the connection is closing. This
+string must be no longer than 123 bytes of UTF-8 text (not characters).
+
+##### Instances
+``` purescript
+Generic Reason
+Generic Reason
+```
+
+#### `runReason`
+
+``` purescript
+runReason :: Reason -> String
+```
+
+#### `URL`
+
+``` purescript
+newtype URL
+  = URL String
+```
+
+A synonym for URL strings.
+
+##### Instances
+``` purescript
+Generic URL
+```
+
+#### `runURL`
+
+``` purescript
+runURL :: URL -> String
+```
 
 #### `Message`
 
 ``` purescript
-type Message = String
+newtype Message
+  = Message String
 ```
 
 A synonym for message strings.
 
-#### `mkWebSocket`
+#### `runMessage`
 
 ``` purescript
-mkWebSocket :: forall e. URI -> Eff (ws :: WebSocket | e) Socket
+runMessage :: Message -> String
 ```
-
-Create a websocket object for a URI.
-
-#### `onMessage`
-
-``` purescript
-onMessage :: forall e a. Socket -> (Message -> Eff (ws :: WebSocket | e) a) -> Eff (ws :: WebSocket | e) Unit
-```
-
-Register a callback for incoming messages.
-
-#### `onError`
-
-``` purescript
-onError :: forall e a. Socket -> Eff (ws :: WebSocket | e) a -> Eff (ws :: WebSocket | e) Unit
-```
-
-Register a callback for `error` events.
-
-#### `onOpen`
-
-``` purescript
-onOpen :: forall e a. Socket -> Eff (ws :: WebSocket | e) a -> Eff (ws :: WebSocket | e) Unit
-```
-
-Register a callback for `open` events.
-
-#### `onClose`
-
-``` purescript
-onClose :: forall e a. Socket -> Eff (ws :: WebSocket | e) a -> Eff (ws :: WebSocket | e) Unit
-```
-
-Register a callback for `close` events.
-
-#### `send`
-
-``` purescript
-send :: forall e. Socket -> Message -> Eff (ws :: WebSocket | e) Unit
-```
-
-Send a message to a websocket.
 
 

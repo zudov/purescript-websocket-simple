@@ -1,19 +1,13 @@
 # Simple Bindings to Websocket API for Purescript
 
+[![Documentation](http://pursuit.purescript.org/packages/purescript-websocket-simple/badge)](http://pursuit.purescript.org/packages/purescript-websocket-simple)
+[![Latest release](http://img.shields.io/bower/v/purescript-websocket-simple.svg)](https://github.com/zudov/purescript-websocket-simple/releases)
+[![Build Status](https://travis-ci.org/zudov/purescript-websocket-simple.svg?branch=master)](https://travis-ci.org/zudov/purescript-websocket-simple)
+
 ## Example usage
 
-```haskell
-module Main where
+See `example/src/Main.purs`.
 
-import Prelude
-import Control.Monad.Eff.Console
-import WebSocket
+## Documentation
 
-main = do
-  ws <- mkWebSocket "ws://echo.websocket.org"
-  onMessage ws log
-  onOpen ws $ do
-    send ws "hello"
-    send ws "world"
-```
-
+[Docs are on Pursuit](http://pursuit.purescript.org/packages/purescript-websocket-simple)
