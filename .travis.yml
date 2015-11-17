@@ -19,7 +19,7 @@ script:
 after_success:
   - >-
     test $TRAVIS_TAG &&
-    npm run psc-publish \
+    psc-publish \
       | tail -n 1 \
       > output/documentation.json &&
     curl -X POST http://pursuit.purescript.org/packages \
