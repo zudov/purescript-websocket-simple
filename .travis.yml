@@ -15,3 +15,14 @@ script:
   - pulp build && pulp docs
   - bower link
   - cd example/ && bower link purescript-websocket-simple && bower install && pulp build
+
+after_success:
+  - >-
+    test $TRAVIS_TAG &&
+    npm run psc-publish \
+      | tail -n 1 \
+      > output/documentation.json &&
+    curl -X POST http://pursuit.purescript.org/packages \
+      -d @output/documentation.json \
+      -H 'Accept: application/json' \
+      -H "Authorization: token ${GITHUB_TOKEN}"
