@@ -5,14 +5,20 @@ module WebSocket
   , WebSocket()
   , newWebSocket
   , Connection(..)
-  , URL()
-  , Message()
-  , messageData
+  , URL(..)
+  , runURL
+  , Message(..)
+  , runMessage
+  , runMessageEvent
   , Code(..)
+  , runCode
   , Reason(..)
+  , runReason
   , ReadyState(..)
   , Protocol(..)
-  , BufferedAmount(..)
+  , runProtocol
+  , BufferedAmount()
+  , runBufferedAmount
   , BinaryType(..)
   ) where
 
@@ -49,25 +55,25 @@ foreign import newWebSocketImpl :: forall eff. Fn2 URL
                                                    (Array Protocol)
                                                    (Eff (ws :: WEBSOCKET | eff) ConnectionImpl)
 
-messageData :: MessageEvent -> Message
-messageData event = case prop "data" (toForeign event) of
+runMessageEvent :: MessageEvent -> Message
+runMessageEvent event = case prop "data" (toForeign event) of
                       Right x -> unsafeFromForeign x
                       Left _  -> specViolation "'data' missing from MessageEvent"
 
 type ConnectionImpl =
   { setBinaryType     :: forall eff. String -> Eff (ws :: WEBSOCKET | eff) Unit
   , getBinaryType     :: forall eff. Eff (ws :: WEBSOCKET | eff) String
-  , getBufferedAmount :: forall eff. Eff (ws :: WEBSOCKET | eff) Int
+  , getBufferedAmount :: forall eff. Eff (ws :: WEBSOCKET | eff) BufferedAmount
   , setOnclose        :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
   , setOnerror        :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
   , setOnmessage      :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
   , setOnopen         :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
-  , setProtocol       :: forall eff. String -> Eff (ws :: WEBSOCKET | eff) Unit
-  , getProtocol       :: forall eff. Eff (ws :: WEBSOCKET | eff) String
+  , setProtocol       :: forall eff. Protocol -> Eff (ws :: WEBSOCKET | eff) Unit
+  , getProtocol       :: forall eff. Eff (ws :: WEBSOCKET | eff) Protocol
   , getReadyState     :: forall eff. Eff (ws :: WEBSOCKET | eff) Int
-  , getUrl            :: forall eff. Eff (ws :: WEBSOCKET | eff) String
+  , getUrl            :: forall eff. Eff (ws :: WEBSOCKET | eff) URL
   , closeImpl         :: forall eff. Maybe Code -> Maybe Reason -> Eff (ws :: WEBSOCKET | eff) Unit
-  , sendImpl          :: forall eff. String -> Eff (ws :: WEBSOCKET | eff) Unit
+  , sendImpl          :: forall eff. Message -> Eff (ws :: WEBSOCKET | eff) Unit
   , getSocket         :: forall eff. Eff (ws :: WEBSOCKET | eff) WebSocket
   }
 
@@ -130,7 +136,7 @@ newtype Connection = Connection
   , readyState     :: forall eff. GettableVar (ws :: WEBSOCKET | eff) ReadyState
   , url            :: forall eff. GettableVar (ws :: WEBSOCKET | eff) URL
   , close          :: forall eff. Maybe Code -> Maybe Reason -> Eff (ws :: WEBSOCKET | eff) Unit
-  , send           :: forall eff. String -> Eff (ws :: WEBSOCKET | eff) Unit
+  , send           :: forall eff. Message -> Eff (ws :: WEBSOCKET | eff) Unit
   , socket         :: forall eff. GettableVar (ws :: WEBSOCKET | eff) WebSocket
   }
 
@@ -147,10 +153,28 @@ fromBinaryType Blob = "blob"
 fromBinaryType ArrayBuffer = "arraybuffer"
 
 -- | The number of bytes of data that have been buffered (queued but not yet transmitted)
-type BufferedAmount = Int
+newtype BufferedAmount = BufferedAmount Int
+
+runBufferedAmount :: BufferedAmount -> Int
+runBufferedAmount (BufferedAmount a) = a
+
+derive instance genericBufferedAmount :: Generic BufferedAmount
+instance eqBufferedAmount :: Eq BufferedAmount where
+  eq (BufferedAmount a) (BufferedAmount b) = eq a b
+instance ordBufferedAmount :: Ord BufferedAmount where
+  compare (BufferedAmount a) (BufferedAmount b) = compare a b
 
 -- | A string indicating the name of the sub-protocol.
-type Protocol = String
+newtype Protocol = Protocol String
+
+runProtocol :: Protocol -> String
+runProtocol (Protocol a) = a
+
+derive instance genericProtocol :: Generic Protocol
+instance eqProtocol :: Eq Protocol where
+  eq (Protocol a) (Protocol b) = eq a b
+instance ordProtocol :: Ord Protocol where
+  compare (Protocol a) (Protocol b) = compare a b
 
 -- | State of the connection.
 data ReadyState = Connecting | Open | Closing | Closed
@@ -192,14 +216,37 @@ fromEnumReadyState Closed     = 3
 
 -- | A numeric value indicating the status code explaining why the connection is being closed.
 -- | See [the list of status codes](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes).
-type Code = Int
+newtype Code = Code Int
+
+runCode :: Code -> Int
+runCode (Code a) = a
+
+derive instance genericCode :: Generic Code
+instance eqCode :: Eq Code where
+  eq (Code a) (Code b) = eq a b
+instance ordCode :: Ord Code where
+  compare (Code a) (Code b) = compare a b
 
 -- | A human-readable string explaining why the connection is closing. This
 -- | string must be no longer than 123 bytes of UTF-8 text (not characters).
-type Reason = String
+newtype Reason = Reason String
+
+runReason :: Reason -> String
+runReason (Reason a) = a
+
+derive instance genericReason :: Generic Reason
 
 -- | A synonym for URL strings.
-type URL = String
+newtype URL = URL String
+
+runURL :: URL -> String
+runURL (URL a) = a
+
+derive instance genericURL :: Generic URL
 
 -- | A synonym for message strings.
-type Message = String
+newtype Message = Message String
+derive instance genericMessage :: Generic Reason
+
+runMessage :: Message -> String
+runMessage (Message a) = a

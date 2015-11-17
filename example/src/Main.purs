@@ -12,27 +12,27 @@ import Data.Maybe (Maybe(..))
 import WebSocket
 
 main = do
-  Connection socket <- newWebSocket "ws://echo.websocket.org" []
+  Connection socket <- newWebSocket (URL "ws://echo.websocket.org") []
 
   socket.onopen $= \event -> do
     logAny event
     log "onopen: Connection opened"
 
-    log =<< get socket.url
+    log <<< runURL =<< get socket.url
 
     log "onopen: Sending 'hello'"
-    socket.send "hello"
+    socket.send (Message "hello")
 
     log "onopen: Sending 'goodbye'"
-    socket.send "goodbye"
+    socket.send (Message "goodbye")
 
   socket.onmessage $= \event -> do
     logAny event
-    let message = messageData event
+    let received = runMessage (runMessageEvent event)
 
-    log $ "onmessage: Received '" ++ messageData event ++ "'"
+    log $ "onmessage: Received '" ++ received ++ "'"
 
-    when (message == "goodbye") do
+    when (received == "goodbye") do
       log "onmessage: closing connection"
       socket.close Nothing Nothing
 
