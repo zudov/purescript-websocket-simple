@@ -19,7 +19,7 @@
     "purescript-functions": "~0.1.0",
     "purescript-generics": "~0.5.1",
     "purescript-invariant": "~0.3.0",
-    "purescript-var": "zudov/purescript-var"
+    "purescript-var": "^0.0.2"
   },
   "devDependencies": {
     "purescript-console": "~0.1.0"
