@@ -1,7 +1,9 @@
 {
   "name": "purescript-websocket-simple",
   "description": "A low-level wrapper around WebSocket API",
-  "authors": [ "Konstantin Zudov <co@zudov.me>" ],
+  "authors": [
+    "Konstantin Zudov <co@zudov.me>"
+  ],
   "license": "BSD3",
   "moduleType": [
     "node"
@@ -16,14 +18,14 @@
     "type": "git",
     "url": "git://github.com/zudov/purescript-websocket-simple.git"
   },
-  "keywords": [ "purescript" ],
+  "keywords": [
+    "purescript"
+  ],
   "dependencies": {
-    "purescript-dom": "^0.2.8",
-    "purescript-eff": "~0.1.0",
-    "purescript-functions": "~0.1.0",
-    "purescript-generics": "~0.5.1",
-    "purescript-invariant": "~0.3.0",
-    "purescript-var": "^0.0.2"
+    "purescript-generics": "~0.6.2",
+    "purescript-eff": "~0.1.2",
+    "purescript-var": "~0.0.2",
+    "purescript-dom": "~0.2.8"
   },
   "devDependencies": {
     "purescript-console": "~0.1.0"
