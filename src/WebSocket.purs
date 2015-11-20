@@ -23,21 +23,22 @@ module WebSocket
   ) where
 
 import Prelude
-import Control.Monad.Eff
-import Control.Monad.Eff.Var
-import Data.Function
-import Data.Functor.Invariant
-import Data.Functor.Contravariant
-import Data.Nullable
-import DOM.Event.EventTarget
-import DOM.Event.Types
-import Data.Maybe
-import Data.Generic
-import Data.Enum
-import Unsafe.Coerce
-import Data.Either
-import Data.Foreign
-import Data.Foreign.Index
+
+import Control.Monad.Eff (Eff())
+import Control.Monad.Eff.Var (Var(), GettableVar(), SettableVar(), makeVar,
+                              makeGettableVar, makeSettableVar)
+import Data.Function (runFn2, Fn2())
+import Data.Functor.Invariant (imap)
+import Data.Functor.Contravariant (cmap)
+import DOM.Event.EventTarget (eventListener, EventListener())
+import DOM.Event.Types (Event(), MessageEvent(), CloseEvent())
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Generic (Generic, gShow, gEq, gCompare)
+import Data.Enum (Enum, defaultSucc, defaultPred, toEnum, Cardinality(..))
+import Unsafe.Coerce (unsafeCoerce)
+import Data.Either (Either(..))
+import Data.Foreign (toForeign, unsafeFromForeign)
+import Data.Foreign.Index (prop)
 
 foreign import specViolation :: forall a. String -> a
 
