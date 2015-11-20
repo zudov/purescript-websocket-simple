@@ -22,10 +22,10 @@
     "purescript"
   ],
   "dependencies": {
-    "purescript-generics": "~0.6.2",
+    "purescript-generics": "~0.7.0",
     "purescript-eff": "~0.1.2",
     "purescript-var": "~0.0.2",
-    "purescript-dom": "~0.2.8"
+    "purescript-dom": "~0.2.9"
   },
   "devDependencies": {
     "purescript-console": "~0.1.0"
