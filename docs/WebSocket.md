@@ -83,9 +83,9 @@ The number of bytes of data that have been buffered (queued but not yet transmit
 
 ##### Instances
 ``` purescript
-instance genericBufferedAmount :: Generic BufferedAmount
-instance eqBufferedAmount :: Eq BufferedAmount
-instance ordBufferedAmount :: Ord BufferedAmount
+Generic BufferedAmount
+Eq BufferedAmount
+Ord BufferedAmount
 ```
 
 #### `runBufferedAmount`
@@ -105,9 +105,9 @@ A string indicating the name of the sub-protocol.
 
 ##### Instances
 ``` purescript
-instance genericProtocol :: Generic Protocol
-instance eqProtocol :: Eq Protocol
-instance ordProtocol :: Ord Protocol
+Generic Protocol
+Eq Protocol
+Ord Protocol
 ```
 
 #### `runProtocol`
@@ -130,12 +130,12 @@ State of the connection.
 
 ##### Instances
 ``` purescript
-instance genericReadyState :: Generic ReadyState
-instance eqReadyState :: Eq ReadyState
-instance ordReadyState :: Ord ReadyState
-instance showReadyState :: Show ReadyState
-instance boundedReadyState :: Bounded ReadyState
-instance enumReadyState :: Enum ReadyState
+Generic ReadyState
+Eq ReadyState
+Ord ReadyState
+Show ReadyState
+Bounded ReadyState
+Enum ReadyState
 ```
 
 #### `Code`
@@ -150,9 +150,9 @@ See [the list of status codes](https://developer.mozilla.org/en-US/docs/Web/API/
 
 ##### Instances
 ``` purescript
-instance genericCode :: Generic Code
-instance eqCode :: Eq Code
-instance ordCode :: Ord Code
+Generic Code
+Eq Code
+Ord Code
 ```
 
 #### `runCode`
@@ -173,8 +173,8 @@ string must be no longer than 123 bytes of UTF-8 text (not characters).
 
 ##### Instances
 ``` purescript
-instance genericReason :: Generic Reason
-instance genericMessage :: Generic Reason
+Generic Reason
+Generic Reason
 ```
 
 #### `runReason`
@@ -194,7 +194,7 @@ A synonym for URL strings.
 
 ##### Instances
 ``` purescript
-instance genericURL :: Generic URL
+Generic URL
 ```
 
 #### `runURL`
