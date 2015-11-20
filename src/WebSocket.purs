@@ -104,25 +104,25 @@ enhanceConnection c = Connection
 
 -- | - `binaryType` -- The type of binary data being transmitted by the connection.
 -- | - `bufferedAmount` -- The number of bytes of data that have been queued
---                         using calls to `send` but not yet transmitted to the
---                         network. This value does not reset to zero when the
---                         connection is closed; if you keep calling `send`,
---                         this will continue to climb.
+-- |   using calls to `send` but not yet transmitted to the
+-- |   network. This value does not reset to zero when the
+-- |   connection is closed; if you keep calling `send`,
+-- |   this will continue to climb.
 -- | - `onclose` -- An event listener to be called when the `Connection`'s
--- |                `readyState` changes to `Closed`.
+-- |   `readyState` changes to `Closed`.
 -- | - `onerror` -- An event listener to be called when an error occurs.
 -- | - `onmessage` -- An event listener to be called when a message is received
--- |                  from the server.
+-- |   from the server.
 -- | - `onopen` -- An event listener to be called when the `Connection`'s
--- |               readyState changes to `Open`; this indicates that the
--- |               connection is ready to send and receive data.
+-- |   readyState changes to `Open`; this indicates that the
+-- |   connection is ready to send and receive data.
 -- | - `protocol` -- A string indicating the name of the sub-protocol the server selected.
 -- | - `readyState` -- The current state of the connection.
 -- | - `url` -- The URL as resolved by during construction. This is always an absolute URL.
 -- | - `close` -- Closes the connection or connection attempt, if any.
--- |              If the connection is already CLOSED, this method does nothing.
--- |              If `Code` isn't specified a default value of 1000 (indicating
--- |               a normal "transaction complete" closure) is assumed
+-- |   If the connection is already CLOSED, this method does nothing.
+-- |   If `Code` isn't specified a default value of 1000 (indicating
+-- |   a normal "transaction complete" closure) is assumed
 -- | - `send` -- Transmits data to the server.
 -- | - `socket` -- Reference to closured WebSocket object.
 newtype Connection = Connection

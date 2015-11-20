@@ -39,6 +39,30 @@ newtype Connection
   = Connection { binaryType :: forall eff. Var (ws :: WEBSOCKET | eff) BinaryType, bufferedAmount :: forall eff. GettableVar (ws :: WEBSOCKET | eff) BufferedAmount, onclose :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (CloseEvent -> Eff handlerEff Unit), onerror :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit), onmessage :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (MessageEvent -> Eff handlerEff Unit), onopen :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit), protocol :: forall eff. Var (ws :: WEBSOCKET | eff) Protocol, readyState :: forall eff. GettableVar (ws :: WEBSOCKET | eff) ReadyState, url :: forall eff. GettableVar (ws :: WEBSOCKET | eff) URL, close :: forall eff. Maybe Code -> Maybe Reason -> Eff (ws :: WEBSOCKET | eff) Unit, send :: forall eff. Message -> Eff (ws :: WEBSOCKET | eff) Unit, socket :: forall eff. GettableVar (ws :: WEBSOCKET | eff) WebSocket }
 ```
 
+- `binaryType` -- The type of binary data being transmitted by the connection.
+- `bufferedAmount` -- The number of bytes of data that have been queued
+  using calls to `send` but not yet transmitted to the
+  network. This value does not reset to zero when the
+  connection is closed; if you keep calling `send`,
+  this will continue to climb.
+- `onclose` -- An event listener to be called when the `Connection`'s
+  `readyState` changes to `Closed`.
+- `onerror` -- An event listener to be called when an error occurs.
+- `onmessage` -- An event listener to be called when a message is received
+  from the server.
+- `onopen` -- An event listener to be called when the `Connection`'s
+  readyState changes to `Open`; this indicates that the
+  connection is ready to send and receive data.
+- `protocol` -- A string indicating the name of the sub-protocol the server selected.
+- `readyState` -- The current state of the connection.
+- `url` -- The URL as resolved by during construction. This is always an absolute URL.
+- `close` -- Closes the connection or connection attempt, if any.
+  If the connection is already CLOSED, this method does nothing.
+  If `Code` isn't specified a default value of 1000 (indicating
+  a normal "transaction complete" closure) is assumed
+- `send` -- Transmits data to the server.
+- `socket` -- Reference to closured WebSocket object.
+
 #### `BinaryType`
 
 ``` purescript
@@ -59,9 +83,9 @@ The number of bytes of data that have been buffered (queued but not yet transmit
 
 ##### Instances
 ``` purescript
-Generic BufferedAmount
-Eq BufferedAmount
-Ord BufferedAmount
+instance genericBufferedAmount :: Generic BufferedAmount
+instance eqBufferedAmount :: Eq BufferedAmount
+instance ordBufferedAmount :: Ord BufferedAmount
 ```
 
 #### `runBufferedAmount`
@@ -81,9 +105,9 @@ A string indicating the name of the sub-protocol.
 
 ##### Instances
 ``` purescript
-Generic Protocol
-Eq Protocol
-Ord Protocol
+instance genericProtocol :: Generic Protocol
+instance eqProtocol :: Eq Protocol
+instance ordProtocol :: Ord Protocol
 ```
 
 #### `runProtocol`
@@ -106,12 +130,12 @@ State of the connection.
 
 ##### Instances
 ``` purescript
-Generic ReadyState
-Eq ReadyState
-Ord ReadyState
-Show ReadyState
-Bounded ReadyState
-Enum ReadyState
+instance genericReadyState :: Generic ReadyState
+instance eqReadyState :: Eq ReadyState
+instance ordReadyState :: Ord ReadyState
+instance showReadyState :: Show ReadyState
+instance boundedReadyState :: Bounded ReadyState
+instance enumReadyState :: Enum ReadyState
 ```
 
 #### `Code`
@@ -126,9 +150,9 @@ See [the list of status codes](https://developer.mozilla.org/en-US/docs/Web/API/
 
 ##### Instances
 ``` purescript
-Generic Code
-Eq Code
-Ord Code
+instance genericCode :: Generic Code
+instance eqCode :: Eq Code
+instance ordCode :: Ord Code
 ```
 
 #### `runCode`
@@ -149,8 +173,8 @@ string must be no longer than 123 bytes of UTF-8 text (not characters).
 
 ##### Instances
 ``` purescript
-Generic Reason
-Generic Reason
+instance genericReason :: Generic Reason
+instance genericMessage :: Generic Reason
 ```
 
 #### `runReason`
@@ -170,7 +194,7 @@ A synonym for URL strings.
 
 ##### Instances
 ``` purescript
-Generic URL
+instance genericURL :: Generic URL
 ```
 
 #### `runURL`
