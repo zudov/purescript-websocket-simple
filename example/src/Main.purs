@@ -12,7 +12,7 @@ import Data.Maybe (Maybe(..))
 import WebSocket
 
 main = do
-  Connection socket <- newWebSocket (URL "ws://echo.websocket.org") []
+  socket <- newWebSocket (URL "ws://echo.websocket.org") []
 
   socket.onopen $= \event -> do
     logAny event
