@@ -22,7 +22,8 @@ module WebSocket
   , BinaryType(..)
   ) where
 
-import Prelude
+import Prelude (class Ord, compare, class Eq, eq, class Bounded, class Show,
+                Unit, (<$>), map, (<<<), ($))
 
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Var (Var(), GettableVar(), SettableVar(), makeVar,
@@ -33,8 +34,8 @@ import Data.Functor.Contravariant (cmap)
 import DOM.Event.EventTarget (eventListener, EventListener())
 import DOM.Event.Types (Event(), MessageEvent(), CloseEvent())
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Generic (Generic, gShow, gEq, gCompare)
-import Data.Enum (Enum, defaultSucc, defaultPred, toEnum, Cardinality(..))
+import Data.Generic (class Generic, gShow, gEq, gCompare)
+import Data.Enum (class Enum, defaultSucc, defaultPred, toEnum, Cardinality(..))
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Either (Either(..))
 import Data.Foreign (toForeign, unsafeFromForeign)
