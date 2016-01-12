@@ -4,7 +4,7 @@ module WebSocket
   ( WEBSOCKET()
   , WebSocket()
   , newWebSocket
-  , Connection(..)
+  , Connection()
   , URL(..)
   , runURL
   , Message(..)
@@ -83,7 +83,7 @@ coerceEvent :: forall a. Event -> a
 coerceEvent = unsafeCoerce
 
 enhanceConnection :: ConnectionImpl -> Connection
-enhanceConnection c = Connection
+enhanceConnection c =
   { binaryType: imap toBinaryType fromBinaryType $ makeVar c.getBinaryType c.setBinaryType
   , bufferedAmount: makeGettableVar c.getBufferedAmount
   , onclose: cmap (eventListener <<< (`map` coerceEvent)) (makeSettableVar c.setOnclose)
@@ -127,7 +127,7 @@ enhanceConnection c = Connection
 -- |   a normal "transaction complete" closure) is assumed
 -- | - `send` -- Transmits data to the server.
 -- | - `socket` -- Reference to closured WebSocket object.
-newtype Connection = Connection
+type Connection =
   { binaryType     :: forall eff. Var (ws :: WEBSOCKET | eff) BinaryType
   , bufferedAmount :: forall eff. GettableVar (ws :: WEBSOCKET | eff) BufferedAmount
   , onclose        :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (CloseEvent -> Eff handlerEff Unit)
