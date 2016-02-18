@@ -3,12 +3,12 @@ sudo: false
 node_js:
   - 5.6
 install:
-- npm install purescript bower pulp -g
+- npm install purescript bower pulp purescript-psa -g
 - bower install
 script:
-  - pulp build && pulp docs
+  - pulp build --censor-lib && pulp docs
   - bower link
-  - cd example/ && bower link purescript-websocket-simple && bower install && pulp build
+  - cd example/ && bower -q link purescript-websocket-simple && bower -q install && pulp build --censor-lib
 
 after_success:
   - >-
