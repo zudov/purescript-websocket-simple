@@ -4,7 +4,7 @@
   "authors": [
     "Konstantin Zudov <co@zudov.me>"
   ],
-  "license": "BSD3",
+  "license": "BSD-3-Clause",
   "moduleType": [
     "node"
   ],
