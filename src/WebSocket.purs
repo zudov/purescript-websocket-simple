@@ -26,6 +26,7 @@ import Prelude (class Ord, compare, class Eq, eq, class Bounded, class Show,
                 Unit, (<$>), map, (<<<), ($))
 
 import Control.Monad.Eff (Eff())
+import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Var (Var(), GettableVar(), SettableVar(), makeVar,
                               makeGettableVar, makeSettableVar)
 import Data.Function (runFn2, Fn2())
@@ -50,12 +51,12 @@ foreign import data WEBSOCKET :: !
 foreign import data WebSocket :: *
 
 -- | Initiate a websocket connection.
-newWebSocket :: forall eff. URL -> Array Protocol -> Eff (ws :: WEBSOCKET | eff) Connection
+newWebSocket :: forall eff. URL -> Array Protocol -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Connection
 newWebSocket url protocols = enhanceConnection <$> runFn2 newWebSocketImpl url protocols
 
 foreign import newWebSocketImpl :: forall eff. Fn2 URL
                                                    (Array Protocol)
-                                                   (Eff (ws :: WEBSOCKET | eff) ConnectionImpl)
+                                                   (Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) ConnectionImpl)
 
 runMessageEvent :: MessageEvent -> Message
 runMessageEvent event = case prop "data" (toForeign event) of
@@ -74,8 +75,8 @@ type ConnectionImpl =
   , getProtocol       :: forall eff. Eff (ws :: WEBSOCKET | eff) Protocol
   , getReadyState     :: forall eff. Eff (ws :: WEBSOCKET | eff) Int
   , getUrl            :: forall eff. Eff (ws :: WEBSOCKET | eff) URL
-  , closeImpl         :: forall eff. Maybe Code -> Maybe Reason -> Eff (ws :: WEBSOCKET | eff) Unit
-  , sendImpl          :: forall eff. Message -> Eff (ws :: WEBSOCKET | eff) Unit
+  , closeImpl         :: forall eff. Maybe Code -> Maybe Reason -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit
+  , sendImpl          :: forall eff. Message -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit
   , getSocket         :: forall eff. Eff (ws :: WEBSOCKET | eff) WebSocket
   }
 
@@ -137,8 +138,8 @@ newtype Connection = Connection
   , protocol       :: forall eff. Var (ws :: WEBSOCKET | eff) Protocol
   , readyState     :: forall eff. GettableVar (ws :: WEBSOCKET | eff) ReadyState
   , url            :: forall eff. GettableVar (ws :: WEBSOCKET | eff) URL
-  , close          :: forall eff. Maybe Code -> Maybe Reason -> Eff (ws :: WEBSOCKET | eff) Unit
-  , send           :: forall eff. Message -> Eff (ws :: WEBSOCKET | eff) Unit
+  , close          :: forall eff. Maybe Code -> Maybe Reason -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit
+  , send           :: forall eff. Message -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit
   , socket         :: forall eff. GettableVar (ws :: WEBSOCKET | eff) WebSocket
   }
 
