@@ -21,7 +21,7 @@ A reference to a WebSocket object.
 #### `newWebSocket`
 
 ``` purescript
-newWebSocket :: forall eff. URL -> Array Protocol -> Eff (ws :: WEBSOCKET | eff) Connection
+newWebSocket :: forall eff. URL -> Array Protocol -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Connection
 ```
 
 Initiate a websocket connection.
@@ -36,7 +36,7 @@ runMessageEvent :: MessageEvent -> Message
 
 ``` purescript
 newtype Connection
-  = Connection { binaryType :: forall eff. Var (ws :: WEBSOCKET | eff) BinaryType, bufferedAmount :: forall eff. GettableVar (ws :: WEBSOCKET | eff) BufferedAmount, onclose :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (CloseEvent -> Eff handlerEff Unit), onerror :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit), onmessage :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (MessageEvent -> Eff handlerEff Unit), onopen :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit), protocol :: forall eff. Var (ws :: WEBSOCKET | eff) Protocol, readyState :: forall eff. GettableVar (ws :: WEBSOCKET | eff) ReadyState, url :: forall eff. GettableVar (ws :: WEBSOCKET | eff) URL, close :: forall eff. Maybe Code -> Maybe Reason -> Eff (ws :: WEBSOCKET | eff) Unit, send :: forall eff. Message -> Eff (ws :: WEBSOCKET | eff) Unit, socket :: forall eff. GettableVar (ws :: WEBSOCKET | eff) WebSocket }
+  = Connection { binaryType :: forall eff. Var (ws :: WEBSOCKET | eff) BinaryType, bufferedAmount :: forall eff. GettableVar (ws :: WEBSOCKET | eff) BufferedAmount, onclose :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (CloseEvent -> Eff handlerEff Unit), onerror :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit), onmessage :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (MessageEvent -> Eff handlerEff Unit), onopen :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit), protocol :: forall eff. Var (ws :: WEBSOCKET | eff) Protocol, readyState :: forall eff. GettableVar (ws :: WEBSOCKET | eff) ReadyState, url :: forall eff. GettableVar (ws :: WEBSOCKET | eff) URL, close :: forall eff. Maybe Code -> Maybe Reason -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit, send :: forall eff. Message -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit, socket :: forall eff. GettableVar (ws :: WEBSOCKET | eff) WebSocket }
 ```
 
 - `binaryType` -- The type of binary data being transmitted by the connection.
