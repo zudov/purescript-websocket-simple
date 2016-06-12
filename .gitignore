@@ -2,3 +2,4 @@ bower_components
 output
 .psci*
 /node_modules
+.pursuit.json

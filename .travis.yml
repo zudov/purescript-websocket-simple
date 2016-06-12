@@ -1,28 +1,20 @@
 language: node_js
 sudo: false
 node_js:
-  - 0.10
-env:
-  - PATH=$HOME/purescript:$PATH
+  - 5.6
 install:
-- TAG="v0.8.0-RC1"
-- wget -O $HOME/purescript.tar.gz https://github.com/purescript/purescript/releases/download/$TAG/linux64.tar.gz
-- tar -xvf $HOME/purescript.tar.gz -C $HOME/
-- chmod a+x $HOME/purescript
-- npm install bower pulp -g
+- npm install purescript bower pulp purescript-psa -g
 - bower install
 script:
-  - pulp build && pulp docs
+  - pulp build --censor-lib && pulp docs
   - bower link
-  - cd example/ && bower link purescript-websocket-simple && bower install && pulp build
+  - cd example/ && bower -q link purescript-websocket-simple && bower -q install && pulp build --censor-lib
 
 after_success:
   - >-
     test $TRAVIS_TAG &&
-    psc-publish \
-      | tail -n 1 \
-      > output/documentation.json &&
-    curl -X POST http://pursuit.purescript.org/packages \
-      -d @output/documentation.json \
+    psc-publish > .pursuit.json &&
+    curl -X POST https://pursuit.purescript.org/packages \
+      -d @.pursuit.json \
       -H 'Accept: application/json' \
       -H "Authorization: token ${GITHUB_TOKEN}"

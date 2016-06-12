@@ -34,7 +34,7 @@ main = do
 
     when (received == "goodbye") do
       log "onmessage: closing connection"
-      socket.close Nothing Nothing
+      socket.close
 
   socket.onclose $= \event -> do
     logAny event

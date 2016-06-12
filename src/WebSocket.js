@@ -37,13 +37,17 @@ exports.newWebSocketImpl = function(url, protocols) {
            , getReadyState: getSocketProp("readyState")
            , getUrl: getSocketProp("url")
            , closeImpl:
-              function(mCode) {
-                return function(mReason) {
-                  return function() {
-                    socket.close(mCode.value0, mReason.value0);
-                    return {};
+              function(params) {
+                return function() {
+                  if (params == null) {
+                    socket.close();
+                  } else if (params.reason == null) {
+                    socket.close(params.code);
+                  } else {
+                    socket.close(params.code, params.reason);
                   }
-                }
+                  return {}
+                } 
               }
            , sendImpl:
               function(message) {
