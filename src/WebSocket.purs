@@ -22,26 +22,24 @@ module WebSocket
   , BinaryType(..)
   ) where
 
-import Prelude (class Ord, compare, class Eq, eq, class Bounded, class Show,
-                Unit, (<$>), map, (<<<), ($))
-
-import Control.Monad.Eff (Eff())
+import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Exception (EXCEPTION)
-import Control.Monad.Eff.Var (Var(), GettableVar(), SettableVar(), makeVar,
-                              makeGettableVar, makeSettableVar)
-import Data.Function (runFn2, Fn2())
-import Data.Functor.Invariant (imap)
-import Data.Functor.Contravariant (cmap)
-import DOM.Event.EventTarget (eventListener, EventListener())
-import DOM.Event.Types (Event(), MessageEvent(), CloseEvent())
-import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Generic (class Generic, gShow, gEq, gCompare)
-import Data.Enum (class Enum, defaultSucc, defaultPred, toEnum, Cardinality(..))
-import Unsafe.Coerce (unsafeCoerce)
+import Control.Monad.Eff.Var (Var, GettableVar, SettableVar, makeVar, makeGettableVar, makeSettableVar)
+import DOM.Event.EventTarget (eventListener, EventListener)
+import DOM.Event.Types (Event)
+import DOM.Websocket.Event.Types (CloseEvent, MessageEvent)
 import Data.Either (Either(..))
+import Data.Enum (class BoundedEnum, class Enum, defaultSucc, defaultPred, toEnum, Cardinality(..))
 import Data.Foreign (toForeign, unsafeFromForeign)
 import Data.Foreign.Index (prop)
-import Data.Nullable (toNullable, Nullable())
+import Data.Function.Uncurried (runFn2, Fn2)
+import Data.Functor.Contravariant (cmap)
+import Data.Functor.Invariant (imap)
+import Data.Generic (class Generic, gShow, gEq, gCompare)
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Nullable (toNullable, Nullable)
+import Prelude (class Ord, compare, class Eq, eq, class Bounded, class Show, Unit, (<$>), map, (<<<), ($))
+import Unsafe.Coerce (unsafeCoerce)
 
 foreign import specViolation :: forall a. String -> a
 
@@ -99,13 +97,13 @@ coerceEvent :: forall a. Event -> a
 coerceEvent = unsafeCoerce
 
 enhanceConnection :: ConnectionImpl -> Connection
-enhanceConnection c = Connection
+enhanceConnection c = Connection $
   { binaryType: imap toBinaryType fromBinaryType $ makeVar c.getBinaryType c.setBinaryType
   , bufferedAmount: makeGettableVar c.getBufferedAmount
-  , onclose: cmap (eventListener <<< (`map` coerceEvent)) (makeSettableVar c.setOnclose)
-  , onerror: cmap (eventListener <<< (`map` coerceEvent)) (makeSettableVar c.setOnerror)
-  , onmessage: cmap (eventListener <<< (`map` coerceEvent)) (makeSettableVar c.setOnmessage)
-  , onopen: cmap (eventListener <<< (`map` coerceEvent)) (makeSettableVar c.setOnopen)
+  , onclose: cmap (eventListener <<< (_ `map` coerceEvent)) (makeSettableVar c.setOnclose)
+  , onerror: cmap (eventListener <<< (_ `map` coerceEvent)) (makeSettableVar c.setOnerror)
+  , onmessage: cmap (eventListener <<< (_ `map` coerceEvent)) (makeSettableVar c.setOnmessage)
+  , onopen: cmap (eventListener <<< (_ `map` coerceEvent)) (makeSettableVar c.setOnopen)
   , protocol: makeVar c.getProtocol c.setProtocol
   , readyState: unsafeReadyState <$> makeGettableVar c.getReadyState
   , url: makeGettableVar c.getUrl
@@ -214,10 +212,12 @@ instance boundedReadyState :: Bounded ReadyState where
   bottom = Connecting
   top    = Closed
 
-instance enumReadyState :: Enum ReadyState where
+instance boundedEnumReadyState :: BoundedEnum ReadyState where
   cardinality = Cardinality 4
   toEnum      = toEnumReadyState
   fromEnum    = fromEnumReadyState
+
+instance enumReadyState :: Enum ReadyState where
   succ        = defaultSucc toEnumReadyState fromEnumReadyState
   pred        = defaultPred toEnumReadyState fromEnumReadyState
 
