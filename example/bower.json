@@ -13,6 +13,12 @@
   "dependencies": {
     "purescript-console": "^1.0.0",
     "purescript-debug": "^1.0.0",
-    "purescript-websocket-simple": "*"
+    "purescript-websocket-simple": "*",
+    "purescript-generics": "~1.0.0",
+    "purescript-eff": "~1.0.0",
+    "purescript-var": "~0.2.0",
+    "purescript-dom": "~1.1.0",
+    "purescript-exceptions": "^1.0.0",
+    "purescript-control": "^1.0.0"
   }
 }
