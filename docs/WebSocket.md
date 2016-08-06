@@ -36,7 +36,7 @@ runMessageEvent :: MessageEvent -> Message
 
 ``` purescript
 newtype Connection
-  = Connection { binaryType :: forall eff. Var (ws :: WEBSOCKET | eff) BinaryType, bufferedAmount :: forall eff. GettableVar (ws :: WEBSOCKET | eff) BufferedAmount, onclose :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (CloseEvent -> Eff handlerEff Unit), onerror :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit), onmessage :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (MessageEvent -> Eff handlerEff Unit), onopen :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit), protocol :: forall eff. Var (ws :: WEBSOCKET | eff) Protocol, readyState :: forall eff. GettableVar (ws :: WEBSOCKET | eff) ReadyState, url :: forall eff. GettableVar (ws :: WEBSOCKET | eff) URL, close :: forall eff. Maybe Code -> Maybe Reason -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit, send :: forall eff. Message -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit, socket :: forall eff. GettableVar (ws :: WEBSOCKET | eff) WebSocket }
+  = Connection { binaryType :: forall eff. Var (ws :: WEBSOCKET | eff) BinaryType, bufferedAmount :: forall eff. GettableVar (ws :: WEBSOCKET | eff) BufferedAmount, onclose :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (CloseEvent -> Eff handlerEff Unit), onerror :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit), onmessage :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (MessageEvent -> Eff handlerEff Unit), onopen :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit), protocol :: forall eff. Var (ws :: WEBSOCKET | eff) Protocol, readyState :: forall eff. GettableVar (ws :: WEBSOCKET | eff) ReadyState, url :: forall eff. GettableVar (ws :: WEBSOCKET | eff) URL, close :: forall eff. Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit, close' :: forall eff. Code -> Maybe Reason -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit, send :: forall eff. Message -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit, socket :: forall eff. GettableVar (ws :: WEBSOCKET | eff) WebSocket }
 ```
 
 - `binaryType` -- The type of binary data being transmitted by the connection.
@@ -135,6 +135,7 @@ Eq ReadyState
 Ord ReadyState
 Show ReadyState
 Bounded ReadyState
+BoundedEnum ReadyState
 Enum ReadyState
 ```
 
@@ -145,8 +146,8 @@ newtype Code
   = Code Int
 ```
 
-A numeric value indicating the status code explaining why the connection is being closed.
-See [the list of status codes](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes).
+Should be either equal to 1000 (indicating normal closure) or in the range
+of 3000-4999.
 
 ##### Instances
 ``` purescript
