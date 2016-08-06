@@ -1,6 +1,7 @@
 {
   "name": "purescript-websocket-simple",
   "description": "A low-level wrapper around WebSocket API",
+  "license": "BSD-3-Clause",
   "authors": [
     "Konstantin Zudov <co@zudov.me>"
   ],
