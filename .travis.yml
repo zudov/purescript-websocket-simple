@@ -1,9 +1,9 @@
 language: node_js
 sudo: false
 node_js:
-  - 5.6
+  - node
 install:
-- npm install purescript@0.9.3 bower pulp purescript-psa -g
+- npm install purescript@0.10.2 bower pulp purescript-psa -g
 - bower install
 script:
   - pulp build --censor-lib && pulp docs

@@ -25,6 +25,7 @@ module WebSocket
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Var (Var, GettableVar, SettableVar, makeVar, makeGettableVar, makeSettableVar)
+import Control.Monad.Except (runExcept)
 import DOM.Event.EventTarget (eventListener, EventListener)
 import DOM.Event.Types (Event)
 import DOM.Websocket.Event.Types (CloseEvent, MessageEvent)
@@ -58,7 +59,7 @@ foreign import newWebSocketImpl :: forall eff. Fn2 URL
                                                    (Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) ConnectionImpl)
 
 runMessageEvent :: MessageEvent -> Message
-runMessageEvent event = case prop "data" (toForeign event) of
+runMessageEvent event = case runExcept (prop "data" (toForeign event)) of
                       Right x -> unsafeFromForeign x
                       Left _  -> specViolation "'data' missing from MessageEvent"
 
