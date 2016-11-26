@@ -12,7 +12,7 @@ exports.newWebSocketImpl = function(url, protocols) {
     var platformSpecific = {};
     if (typeof module !== "undefined" && module.require) {
       // We are on node.js
-      platformSpecific.WebSocket = require('ws');
+      platformSpecific.WebSocket = module.require('ws');
     } else {
       // We are in the browser
       platformSpecific.WebSocket = WebSocket;
@@ -55,7 +55,7 @@ exports.newWebSocketImpl = function(url, protocols) {
                     socket.close(params.code, params.reason);
                   }
                   return {}
-                } 
+                }
               }
            , sendImpl:
               function(message) {
