@@ -23,13 +23,13 @@
     "purescript"
   ],
   "dependencies": {
-    "purescript-dom": "^3.1.0",
-    "purescript-eff": "^2.0.0",
-    "purescript-exceptions": "^2.0.0",
-    "purescript-generics": "^3.1.0",
-    "purescript-var": "^1.0.0"
+    "purescript-dom": "^4.0.0",
+    "purescript-eff": "^3.0.0",
+    "purescript-exceptions": "^3.0.0",
+    "purescript-generics": "^4.0.0",
+    "purescript-var": "latest"
   },
   "devDependencies": {
-    "purescript-console": "~2.0.0"
+    "purescript-console": "^3.0.0"
   }
 }

@@ -22,7 +22,7 @@ module WebSocket
   , BinaryType(..)
   ) where
 
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (kind Effect, Eff)
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Var (Var, GettableVar, SettableVar, makeVar, makeGettableVar, makeSettableVar)
 import Control.Monad.Except (runExcept)
@@ -32,7 +32,7 @@ import DOM.Websocket.Event.Types (CloseEvent, MessageEvent)
 import Data.Either (Either(..))
 import Data.Enum (class BoundedEnum, class Enum, defaultSucc, defaultPred, toEnum, Cardinality(..))
 import Data.Foreign (toForeign, unsafeFromForeign)
-import Data.Foreign.Index (prop)
+import Data.Foreign.Index (readProp)
 import Data.Function.Uncurried (runFn2, Fn2)
 import Data.Functor.Contravariant (cmap)
 import Data.Functor.Invariant (imap)
@@ -45,10 +45,10 @@ import Unsafe.Coerce (unsafeCoerce)
 foreign import specViolation :: forall a. String -> a
 
 -- | The effect associated with websocket connections.
-foreign import data WEBSOCKET :: !
+foreign import data WEBSOCKET :: Effect
 
 -- | A reference to a WebSocket object.
-foreign import data WebSocket :: *
+foreign import data WebSocket :: Type
 
 -- | Initiate a websocket connection.
 newWebSocket :: forall eff. URL -> Array Protocol -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Connection
@@ -59,7 +59,7 @@ foreign import newWebSocketImpl :: forall eff. Fn2 URL
                                                    (Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) ConnectionImpl)
 
 runMessageEvent :: MessageEvent -> Message
-runMessageEvent event = case runExcept (prop "data" (toForeign event)) of
+runMessageEvent event = case runExcept (readProp "data" (toForeign event)) of
                       Right x -> unsafeFromForeign x
                       Left _  -> specViolation "'data' missing from MessageEvent"
 
