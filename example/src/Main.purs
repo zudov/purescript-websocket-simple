@@ -13,7 +13,7 @@ main = do
   Connection socket <- newWebSocket (URL "ws://echo.websocket.org") []
 
   socket.onopen $= \event -> do
-    traceAnyM event
+    void $ traceAnyM event
     log "onopen: Connection opened"
 
     log <<< runURL =<< get socket.url
@@ -25,7 +25,7 @@ main = do
     socket.send (Message "goodbye")
 
   socket.onmessage $= \event -> do
-    traceAnyM event
+    void $ traceAnyM event
     let received = runMessage (runMessageEvent event)
 
     log $ "onmessage: Received '" <> received <> "'"
@@ -35,5 +35,5 @@ main = do
       socket.close
 
   socket.onclose $= \event -> do
-    traceAnyM event
+    void $ traceAnyM event
     log "onclose: Connection closed"
