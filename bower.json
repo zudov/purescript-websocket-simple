@@ -27,7 +27,7 @@
     "purescript-eff": "^3.0.0",
     "purescript-exceptions": "^3.0.0",
     "purescript-generics": "^4.0.0",
-    "purescript-var": "latest"
+    "purescript-var": "^2.0.0"
   },
   "devDependencies": {
     "purescript-console": "^3.0.0"
