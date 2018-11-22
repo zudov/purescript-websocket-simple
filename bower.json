@@ -23,13 +23,15 @@
     "purescript"
   ],
   "dependencies": {
-    "purescript-dom": "^4.0.0",
-    "purescript-eff": "^3.0.0",
-    "purescript-exceptions": "^3.0.0",
-    "purescript-generics": "^4.0.0",
-    "purescript-var": "^2.0.0"
+    "purescript-web-socket": "^1.0.0",
+    "purescript-web-events": "^1.0.0",
+    "purescript-effect": "^2.0.0",
+    "purescript-exceptions": "^4.0.0",
+    "purescript-generics-rep": "^6.0.0",
+    "purescript-var": "Thimoteus/purescript-var#25dae0b60466d76f12dc12e9894c4f517a6d6822"
   },
   "devDependencies": {
-    "purescript-console": "^3.0.0"
+    "purescript-debug": "^4.0.0",
+    "purescript-console": "^4.0.0"
   }
 }

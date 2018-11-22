@@ -1,8 +1,7 @@
 -- | This module defines a simple low-level interface to the websockets API.
 
 module WebSocket
-  ( WEBSOCKET()
-  , WebSocket()
+  ( WebSocket()
   , newWebSocket
   , Connection(..)
   , URL(..)
@@ -22,76 +21,57 @@ module WebSocket
   , BinaryType(..)
   ) where
 
-import Control.Monad.Eff (kind Effect, Eff)
-import Control.Monad.Eff.Exception (EXCEPTION)
-import Control.Monad.Eff.Var (Var, GettableVar, SettableVar, makeVar, makeGettableVar, makeSettableVar)
-import Control.Monad.Except (runExcept)
-import DOM.Event.EventTarget (eventListener, EventListener)
-import DOM.Event.Types (Event)
-import DOM.Websocket.Event.Types (CloseEvent, MessageEvent)
-import Data.Either (Either(..))
+import Effect (Effect)
+import Effect.Var (Var, GettableVar, SettableVar, makeVar, makeGettableVar, makeSettableVar)
+import Web.Event.EventTarget (eventListener, EventListener)
+import Web.Event.Internal.Types (Event)
+import Web.Socket.Event.CloseEvent (CloseEvent)
+import Web.Socket.Event.MessageEvent (data_, MessageEvent)
 import Data.Enum (class BoundedEnum, class Enum, defaultSucc, defaultPred, toEnum, Cardinality(..))
-import Data.Foreign (toForeign, unsafeFromForeign)
-import Data.Foreign.Index (readProp)
+import Foreign (unsafeFromForeign)
 import Data.Function.Uncurried (runFn2, Fn2)
 import Data.Functor.Contravariant (cmap)
 import Data.Functor.Invariant (imap)
-import Data.Generic (class Generic, gShow, gEq, gCompare)
+import Data.Generic.Rep (class Generic)
+import Data.Generic.Rep.Show (genericShow)
+import Data.Generic.Rep.Eq (genericEq)
+import Data.Generic.Rep.Ord (genericCompare)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Nullable (toNullable, Nullable)
-import Prelude (class Ord, compare, class Eq, eq, class Bounded, class Show, Unit, (<$>), map, (<<<), ($))
+import Prelude (class Ord, compare, class Eq, eq, class Bounded, class Show, Unit, (<$>), map, (<<<), (>>>), (>>=), ($))
 import Unsafe.Coerce (unsafeCoerce)
 
 foreign import specViolation :: forall a. String -> a
-
--- | The effect associated with websocket connections.
-foreign import data WEBSOCKET :: Effect
 
 -- | A reference to a WebSocket object.
 foreign import data WebSocket :: Type
 
 -- | Initiate a websocket connection.
-newWebSocket :: forall eff. URL -> Array Protocol -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Connection
+newWebSocket :: URL -> Array Protocol -> Effect Connection
 newWebSocket url protocols = enhanceConnection <$> runFn2 newWebSocketImpl url protocols
 
-foreign import newWebSocketImpl :: forall eff. Fn2 URL
+foreign import newWebSocketImpl :: Fn2 URL
                                                    (Array Protocol)
-                                                   (Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) ConnectionImpl)
+                                                   (Effect ConnectionImpl)
 
 runMessageEvent :: MessageEvent -> Message
-runMessageEvent event = case runExcept (readProp "data" (toForeign event)) of
-                      Right x -> unsafeFromForeign x
-                      Left _  -> specViolation "'data' missing from MessageEvent"
+runMessageEvent event = unsafeFromForeign $ data_ event
 
 type ConnectionImpl =
-  { setBinaryType
-      :: forall eff. String -> Eff (ws :: WEBSOCKET | eff) Unit
-  , getBinaryType
-      :: forall eff. Eff (ws :: WEBSOCKET | eff) String
-  , getBufferedAmount
-      :: forall eff. Eff (ws :: WEBSOCKET | eff) BufferedAmount
-  , setOnclose
-      :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
-  , setOnerror
-      :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
-  , setOnmessage
-      :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
-  , setOnopen
-      :: forall eff handlerEff. EventListener handlerEff -> Eff (ws :: WEBSOCKET | eff) Unit
-  , setProtocol
-      :: forall eff. Protocol -> Eff (ws :: WEBSOCKET | eff) Unit
-  , getProtocol
-      :: forall eff. Eff (ws :: WEBSOCKET | eff) Protocol
-  , getReadyState
-      :: forall eff. Eff (ws :: WEBSOCKET | eff) Int
-  , getUrl
-      :: forall eff. Eff (ws :: WEBSOCKET | eff) URL
-  , closeImpl
-      :: forall eff. Nullable { code :: Code, reason :: Nullable Reason } -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit
-  , sendImpl
-      :: forall eff. Message -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit
-  , getSocket
-      :: forall eff. Eff (ws :: WEBSOCKET | eff) WebSocket
+  { setBinaryType :: String -> Effect Unit
+  , getBinaryType :: Effect String
+  , getBufferedAmount :: Effect BufferedAmount
+  , setOnclose :: EventListener -> Effect Unit
+  , setOnerror :: EventListener -> Effect Unit
+  , setOnmessage :: EventListener -> Effect Unit
+  , setOnopen :: EventListener -> Effect Unit
+  , setProtocol :: Protocol -> Effect Unit
+  , getProtocol :: Effect Protocol
+  , getReadyState :: Effect Int
+  , getUrl :: Effect URL
+  , closeImpl :: Nullable { code :: Code, reason :: Nullable Reason } -> Effect Unit
+  , sendImpl :: Message -> Effect Unit
+  , getSocket :: Effect WebSocket
   }
 
 coerceEvent :: forall a. Event -> a
@@ -101,10 +81,10 @@ enhanceConnection :: ConnectionImpl -> Connection
 enhanceConnection c = Connection $
   { binaryType: imap toBinaryType fromBinaryType $ makeVar c.getBinaryType c.setBinaryType
   , bufferedAmount: makeGettableVar c.getBufferedAmount
-  , onclose: cmap (eventListener <<< (_ `map` coerceEvent)) (makeSettableVar c.setOnclose)
-  , onerror: cmap (eventListener <<< (_ `map` coerceEvent)) (makeSettableVar c.setOnerror)
-  , onmessage: cmap (eventListener <<< (_ `map` coerceEvent)) (makeSettableVar c.setOnmessage)
-  , onopen: cmap (eventListener <<< (_ `map` coerceEvent)) (makeSettableVar c.setOnopen)
+  , onclose: makeSettableVar \f -> eventListener (coerceEvent >>> f) >>= c.setOnclose
+  , onerror: makeSettableVar \f -> eventListener (coerceEvent >>> f) >>= c.setOnerror
+  , onmessage: makeSettableVar \f -> eventListener (coerceEvent >>> f) >>= c.setOnmessage
+  , onopen: makeSettableVar \f -> eventListener (coerceEvent >>> f) >>= c.setOnopen
   , protocol: makeVar c.getProtocol c.setProtocol
   , readyState: unsafeReadyState <$> makeGettableVar c.getReadyState
   , url: makeGettableVar c.getUrl
@@ -144,19 +124,19 @@ enhanceConnection c = Connection $
 -- | - `send` -- Transmits data to the server.
 -- | - `socket` -- Reference to closured WebSocket object.
 newtype Connection = Connection
-  { binaryType     :: forall eff. Var (ws :: WEBSOCKET | eff) BinaryType
-  , bufferedAmount :: forall eff. GettableVar (ws :: WEBSOCKET | eff) BufferedAmount
-  , onclose        :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (CloseEvent -> Eff handlerEff Unit)
-  , onerror        :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit)
-  , onmessage      :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (MessageEvent -> Eff handlerEff Unit)
-  , onopen         :: forall eff handlerEff. SettableVar (ws :: WEBSOCKET | eff) (Event -> Eff handlerEff Unit)
-  , protocol       :: forall eff. Var (ws :: WEBSOCKET | eff) Protocol
-  , readyState     :: forall eff. GettableVar (ws :: WEBSOCKET | eff) ReadyState
-  , url            :: forall eff. GettableVar (ws :: WEBSOCKET | eff) URL
-  , close          :: forall eff. Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit
-  , close'         :: forall eff. Code -> Maybe Reason -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit
-  , send           :: forall eff. Message -> Eff (ws :: WEBSOCKET, err :: EXCEPTION | eff) Unit
-  , socket         :: forall eff. GettableVar (ws :: WEBSOCKET | eff) WebSocket
+  { binaryType     :: Var BinaryType
+  , bufferedAmount :: GettableVar BufferedAmount
+  , onclose        :: SettableVar (CloseEvent -> Effect Unit)
+  , onerror        :: SettableVar (Event -> Effect Unit)
+  , onmessage      :: SettableVar (MessageEvent -> Effect Unit)
+  , onopen         :: SettableVar (Event -> Effect Unit)
+  , protocol       :: Var Protocol
+  , readyState     :: GettableVar ReadyState
+  , url            :: GettableVar URL
+  , close          :: Effect Unit
+  , close'         :: Code -> Maybe Reason -> Effect Unit
+  , send           :: Message -> Effect Unit
+  , socket         :: GettableVar WebSocket
   }
 
 -- | The type of binary data being transmitted by the connection.
@@ -177,7 +157,7 @@ newtype BufferedAmount = BufferedAmount Int
 runBufferedAmount :: BufferedAmount -> Int
 runBufferedAmount (BufferedAmount a) = a
 
-derive instance genericBufferedAmount :: Generic BufferedAmount
+derive instance genericBufferedAmount :: Generic BufferedAmount _
 instance eqBufferedAmount :: Eq BufferedAmount where
   eq (BufferedAmount a) (BufferedAmount b) = eq a b
 instance ordBufferedAmount :: Ord BufferedAmount where
@@ -189,7 +169,7 @@ newtype Protocol = Protocol String
 runProtocol :: Protocol -> String
 runProtocol (Protocol a) = a
 
-derive instance genericProtocol :: Generic Protocol
+derive instance genericProtocol :: Generic Protocol _
 instance eqProtocol :: Eq Protocol where
   eq (Protocol a) (Protocol b) = eq a b
 instance ordProtocol :: Ord Protocol where
@@ -198,16 +178,16 @@ instance ordProtocol :: Ord Protocol where
 -- | State of the connection.
 data ReadyState = Connecting | Open | Closing | Closed
 
-derive instance genericReadyState :: Generic ReadyState
+derive instance genericReadyState :: Generic ReadyState _
 
 instance eqReadyState :: Eq ReadyState where
-  eq = gEq
+  eq = genericEq
 
 instance ordReadyState :: Ord ReadyState where
-  compare = gCompare
+  compare = genericCompare
 
 instance showReadyState :: Show ReadyState where
-  show = gShow
+  show = genericShow
 
 instance boundedReadyState :: Bounded ReadyState where
   bottom = Connecting
@@ -243,7 +223,7 @@ newtype Code
 runCode :: Code -> Int
 runCode (Code a) = a
 
-derive instance genericCode :: Generic Code
+derive instance genericCode :: Generic Code _
 instance eqCode :: Eq Code where
   eq (Code a) (Code b) = eq a b
 instance ordCode :: Ord Code where
@@ -256,7 +236,7 @@ newtype Reason = Reason String
 runReason :: Reason -> String
 runReason (Reason a) = a
 
-derive instance genericReason :: Generic Reason
+derive instance genericReason :: Generic Reason _
 
 -- | A synonym for URL strings.
 newtype URL = URL String
@@ -264,11 +244,11 @@ newtype URL = URL String
 runURL :: URL -> String
 runURL (URL a) = a
 
-derive instance genericURL :: Generic URL
+derive instance genericURL :: Generic URL _
 
 -- | A synonym for message strings.
 newtype Message = Message String
-derive instance genericMessage :: Generic Reason
+derive instance genericMessage :: Generic Reason _
 
 runMessage :: Message -> String
 runMessage (Message a) = a

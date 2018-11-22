@@ -1,5 +1,8 @@
-bower_components
-output
-.psci*
-/node_modules
-.pursuit.json
+/.*
+!/.gitignore
+!/.eslintrc.json
+!/.travis.yml
+/bower_components/
+/node_modules/
+/output/
+package-lock.json
