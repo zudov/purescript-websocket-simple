@@ -3,10 +3,12 @@ sudo: false
 node_js:
   - node
 install:
+  - npm install -g bower
   - npm install
-  - bower install
 script:
+  - bower install --production
   - npm run build
+  - bower install
   - npm run example
   - pulp run
 
