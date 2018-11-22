@@ -9,7 +9,7 @@ import Debug.Trace (traceM, class DebugWarning)
 
 import WebSocket (Connection(..), Message(..), URL(..), runMessageEvent, runMessage, runURL, newWebSocket)
 
-main :: DebugWarning => Effect Unit
+main :: Effect Unit
 main = do
   Connection socket <- newWebSocket (URL "ws://echo.websocket.org") []
 
