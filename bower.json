@@ -28,7 +28,7 @@
     "purescript-effect": "^2.0.0",
     "purescript-exceptions": "^4.0.0",
     "purescript-generics-rep": "^6.0.0",
-    "purescript-var": "Thimoteus/purescript-var#25dae0b60466d76f12dc12e9894c4f517a6d6822"
+    "purescript-var": "v3.0.0"
   },
   "devDependencies": {
     "purescript-debug": "^4.0.0",
