@@ -2,18 +2,19 @@ module Main where
 
 import Prelude
 
-import Control.Bind ((=<<))
-import Control.Monad.Eff.Var (($=), get)
-import Control.Monad.Eff.Console (log)
-import Debug.Trace (traceAnyM)
+import Effect (Effect)
+import Effect.Var (($=), get)
+import Effect.Console (log)
+import Debug.Trace (traceM, class DebugWarning)
 
 import WebSocket (Connection(..), Message(..), URL(..), runMessageEvent, runMessage, runURL, newWebSocket)
 
+main :: Effect Unit
 main = do
   Connection socket <- newWebSocket (URL "ws://echo.websocket.org") []
 
   socket.onopen $= \event -> do
-    void $ traceAnyM event
+    traceM event
     log "onopen: Connection opened"
 
     log <<< runURL =<< get socket.url
@@ -25,7 +26,7 @@ main = do
     socket.send (Message "goodbye")
 
   socket.onmessage $= \event -> do
-    void $ traceAnyM event
+    traceM event
     let received = runMessage (runMessageEvent event)
 
     log $ "onmessage: Received '" <> received <> "'"
@@ -35,5 +36,5 @@ main = do
       socket.close
 
   socket.onclose $= \event -> do
-    void $ traceAnyM event
+    traceM event
     log "onclose: Connection closed"
