@@ -247,7 +247,7 @@ derive instance genericURL :: Generic URL _
 
 -- | A synonym for message strings.
 newtype Message = Message String
-derive instance genericMessage :: Generic Reason _
+derive instance genericMessage :: Generic Message _
 
 runMessage :: Message -> String
 runMessage (Message a) = a
