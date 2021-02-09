@@ -16,7 +16,7 @@ module WebSocket
   , ReadyState(..)
   , Protocol(..)
   , runProtocol
-  , BufferedAmount()
+  , BufferedAmount(..)
   , runBufferedAmount
   , BinaryType(..)
   ) where
