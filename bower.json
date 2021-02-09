@@ -27,7 +27,6 @@
     "purescript-web-events": "^1.0.0",
     "purescript-effect": "^2.0.0",
     "purescript-exceptions": "^4.0.0",
-    "purescript-generics-rep": "^6.0.0",
     "purescript-var": "v3.0.0"
   },
   "devDependencies": {
